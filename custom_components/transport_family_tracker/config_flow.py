@@ -60,10 +60,44 @@ class FamilyTransportTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN)
                     selector.EntitySelectorConfig(domain="sensor")
                 ),
                 vol.Optional("morning_departure_time"): selector.TimeSelector(),
+                vol.Optional("morning_days", default=["mon", "tue", "wed", "thu", "fri"]): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            {"value": "mon", "label": "Monday"},
+                            {"value": "tue", "label": "Tuesday"},
+                            {"value": "wed", "label": "Wednesday"},
+                            {"value": "thu", "label": "Thursday"},
+                            {"value": "fri", "label": "Friday"},
+                            {"value": "sat", "label": "Saturday"},
+                            {"value": "sun", "label": "Sunday"},
+                        ],
+                        multiple=True,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Optional("morning_exclude_holidays", default=True): bool,
+                vol.Optional("morning_custom_exclude_dates"): str,
                 vol.Optional(CONF_EVENING_ROUTE): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="sensor")
                 ),
                 vol.Optional("evening_departure_time"): selector.TimeSelector(),
+                vol.Optional("evening_days", default=["mon", "tue", "wed", "thu", "fri"]): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            {"value": "mon", "label": "Monday"},
+                            {"value": "tue", "label": "Tuesday"},
+                            {"value": "wed", "label": "Wednesday"},
+                            {"value": "thu", "label": "Thursday"},
+                            {"value": "fri", "label": "Friday"},
+                            {"value": "sat", "label": "Saturday"},
+                            {"value": "sun", "label": "Sunday"},
+                        ],
+                        multiple=True,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Optional("evening_exclude_holidays", default=True): bool,
+                vol.Optional("evening_custom_exclude_dates"): str,
                 vol.Optional(CONF_NOTIFY, default=[]): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="notify", multiple=True)
                 ),

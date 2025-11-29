@@ -16,8 +16,14 @@
           "person": "Life360 Device Tracker",
           "morning_route": "Morning Transport Route (optional)",
           "morning_departure_time": "Morning Departure Time (optional)",
+          "morning_days": "Morning Active Days",
+          "morning_exclude_holidays": "Morning: Skip Holidays",
+          "morning_custom_exclude_dates": "Morning: Custom Exclude Dates",
           "evening_route": "Evening Transport Route (optional)",
           "evening_departure_time": "Evening Departure Time (optional)",
+          "evening_days": "Evening Active Days",
+          "evening_exclude_holidays": "Evening: Skip Holidays",
+          "evening_custom_exclude_dates": "Evening: Custom Exclude Dates",
           "notify_entities": "Who to Notify (optional)"
         }
       },

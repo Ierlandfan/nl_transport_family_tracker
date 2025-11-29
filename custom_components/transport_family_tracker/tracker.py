@@ -22,6 +22,7 @@ from .const import (
     SPEED_THRESHOLD_DRIVING,
     SPEED_THRESHOLD_STOPPED,
 )
+from .schedule import should_show_route
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,40 +143,27 @@ class FamilyTransportTracker:
         
         current_time_only = current_time.time()
         
-        # Check morning route with time
+        # Check morning route
         if person_config.get("morning_route"):
-            morning_time = person_config.get("morning_departure_time")
-            if morning_time:
-                # Parse time string (HH:MM:SS or HH:MM)
-                if isinstance(morning_time, str):
-                    parts = morning_time.split(":")
-                    morning_dt = dt_time(int(parts[0]), int(parts[1]))
-                    # Check if within 2 hours of departure
-                    start = dt_time(max(0, morning_dt.hour - 2), morning_dt.minute)
-                    end = dt_time(min(23, morning_dt.hour + 2), morning_dt.minute)
-                    if start <= current_time_only <= end:
-                        return person_config["morning_route"]
-            else:
-                # Fallback to hour-based (6-12)
-                if 6 <= current_time.hour < 12:
-                    return person_config["morning_route"]
+            morning_schedule = {
+                "days": person_config.get("morning_days", ["mon", "tue", "wed", "thu", "fri"]),
+                "exclude_holidays": person_config.get("morning_exclude_holidays", True),
+                "custom_exclude_dates": person_config.get("morning_custom_exclude_dates", ""),
+                "departure_time": person_config.get("morning_departure_time"),
+            }
+            if should_show_route(morning_schedule, current_time):
+                return person_config["morning_route"]
         
-        # Check evening route with time
+        # Check evening route
         if person_config.get("evening_route"):
-            evening_time = person_config.get("evening_departure_time")
-            if evening_time:
-                if isinstance(evening_time, str):
-                    parts = evening_time.split(":")
-                    evening_dt = dt_time(int(parts[0]), int(parts[1]))
-                    # Check if within 2 hours of departure
-                    start = dt_time(max(0, evening_dt.hour - 2), evening_dt.minute)
-                    end = dt_time(min(23, evening_dt.hour + 2), evening_dt.minute)
-                    if start <= current_time_only <= end:
-                        return person_config["evening_route"]
-            else:
-                # Fallback to hour-based (16-20)
-                if 16 <= current_time.hour < 20:
-                    return person_config["evening_route"]
+            evening_schedule = {
+                "days": person_config.get("evening_days", ["mon", "tue", "wed", "thu", "fri"]),
+                "exclude_holidays": person_config.get("evening_exclude_holidays", True),
+                "custom_exclude_dates": person_config.get("evening_custom_exclude_dates", ""),
+                "departure_time": person_config.get("evening_departure_time"),
+            }
+            if should_show_route(evening_schedule, current_time):
+                return person_config["evening_route"]
         
         return None
 
