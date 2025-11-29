@@ -2,7 +2,7 @@
 
 A Home Assistant integration that tracks if family members are on their planned public transport routes by combining:
 - **Life360** location data
-- **Dutch Public Transport** schedule data
+- **Dutch Public Transport** schedule data (https://github.com/Ierlandfan/nl_public_transport)
 - **Smart proximity detection** to determine if they're on the right train/bus
 - **Automatic notifications** for missed transport or route deviations
 
