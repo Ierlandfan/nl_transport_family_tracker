@@ -2,19 +2,25 @@
   "config": {
     "step": {
       "user": {
+        "title": "Family Transport Tracker Setup",
+        "description": "Configure family members to track on public transport routes",
         "menu_options": {
           "add_person": "Add Person to Track",
           "finish": "Finish Setup"
         }
       },
       "add_person": {
-        "title": "Add Person",
+        "title": "Add Person to Track",
+        "description": "Link a family member's Life360 tracker to their transport routes",
         "data": {
           "person": "Life360 Device Tracker",
           "morning_route": "Morning Transport Route (optional)",
           "evening_route": "Evening Transport Route (optional)",
           "notify_entities": "Who to Notify (optional)"
         }
+      },
+      "finish": {
+        "title": "Setup Complete"
       }
     },
     "abort": {
