@@ -1,4 +1,4 @@
-# 🚂👨‍👩‍👧 Family Transport Tracker
+# Family Transport Tracker
 
 A Home Assistant integration that tracks if family members are on their planned public transport routes by combining:
 - **Life360** location data
@@ -41,7 +41,7 @@ A Home Assistant integration that tracks if family members are on their planned 
 ## How It Works
 
 ### 1. Setup Person-Route Mapping
-```yaml
+
 # Via UI configuration:
 Person: "Dad"
 Usual Morning Route: Amsterdam → Utrecht (08:30 departure)
@@ -116,6 +116,7 @@ Reason: Technical issues
 - Checks if train is delayed
 - Sends notification to Mom with new ETA
 - Updates when Dad boards alternate route
+- Family can be notified that dinner will be served later
 
 ### 2. Kid School Commute
 **Scenario**: Track if teenager catches morning bus
@@ -123,6 +124,7 @@ Reason: Technical issues
 - Confirms departure at 08:00
 - Sends "On the bus" notification to parents
 - Alerts if missed + shows next bus time
+- Mom not worried about being not on time. 
 
 ### 3. Pickup Coordination
 **Scenario**: Pick up partner at station
@@ -130,12 +132,15 @@ Reason: Technical issues
 - Sends ETA updates
 - Notifies when train arrives
 - Accounts for delays automatically
+- Loved ones do not miss each other
+-  
 
 ### 4. Emergency Alerts
 **Scenario**: Family member stuck at station
 - Detects person still at station 15 min after departure
+- Weather is expecting to get worse. (Storm / Tornado / Other emergency) is coming earlier than expected)
 - Checks for service disruptions
-- Suggests alternatives
+- Suggests alternatives (Can be picked up by car, taxi, emegency services)
 - Notifies family immediately
 
 ## Sensors Created
@@ -377,8 +382,6 @@ columns: 2
 - Machine learning for route prediction
 - Traffic delay correlation
 - Weather-based suggestions
-- Carbon footprint tracking
-- Cost tracking per journey
 - Social features (share ETA with friends)
 
 ---
