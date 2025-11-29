@@ -15,7 +15,9 @@
         "data": {
           "person": "Life360 Device Tracker",
           "morning_route": "Morning Transport Route (optional)",
+          "morning_departure_time": "Morning Departure Time (optional)",
           "evening_route": "Evening Transport Route (optional)",
+          "evening_departure_time": "Evening Departure Time (optional)",
           "notify_entities": "Who to Notify (optional)"
         }
       },

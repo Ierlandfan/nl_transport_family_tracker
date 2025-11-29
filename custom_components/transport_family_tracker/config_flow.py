@@ -59,9 +59,11 @@ class FamilyTransportTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN)
                 vol.Optional(CONF_MORNING_ROUTE): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="sensor")
                 ),
+                vol.Optional("morning_departure_time"): selector.TimeSelector(),
                 vol.Optional(CONF_EVENING_ROUTE): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="sensor")
                 ),
+                vol.Optional("evening_departure_time"): selector.TimeSelector(),
                 vol.Optional(CONF_NOTIFY, default=[]): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="notify", multiple=True)
                 ),
