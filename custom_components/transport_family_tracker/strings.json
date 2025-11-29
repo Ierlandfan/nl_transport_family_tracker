@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "menu_options": {
+          "add_person": "Add Person to Track",
+          "finish": "Finish Setup"
+        }
+      },
+      "add_person": {
+        "title": "Add Person",
+        "data": {
+          "person": "Life360 Device Tracker",
+          "morning_route": "Morning Transport Route (optional)",
+          "evening_route": "Evening Transport Route (optional)",
+          "notify_entities": "Who to Notify (optional)"
+        }
+      }
+    },
+    "abort": {
+      "no_people": "At least one person must be added"
+    }
+  }
+}

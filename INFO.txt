@@ -1,0 +1,10 @@
+Family Transport Tracker - Complete Integration
+
+Links Life360 location tracking with Dutch Public Transport routes to:
+- Detect if family members are on their planned transport
+- Send alerts for missed trains/buses
+- Provide alternative route suggestions
+- Track journey progress and ETAs
+
+Location: /home/ronaldb/nl_transport_family_tracker/
+Ready for testing and deployment.
