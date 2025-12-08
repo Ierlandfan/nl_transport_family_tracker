@@ -1,0 +1,310 @@
+# Example Dashboard for Transport Family Tracker
+
+## Complete Journey Tracking Dashboard
+
+```yaml
+title: Family Transport Tracker
+path: transport
+icon: mdi:bus-clock
+cards:
+  - type: vertical-stack
+    cards:
+      # Header
+      - type: markdown
+        content: |
+          # 🚌 Family Transport Tracker
+          Real-time journey monitoring and departure times
+
+      # John's Journey Status
+      - type: custom:vertical-stack-in-card
+        title: "John's Commute"
+        cards:
+          - type: entities
+            entities:
+              - entity: sensor.john_journey_status
+                name: Journey Status
+                icon: mdi:map-marker-path
+              - entity: sensor.john_transport_mode
+                name: Transport Mode
+                icon: mdi:bus-side
+              - entity: sensor.john_to_work_eta
+                name: ETA to Work
+                icon: mdi:clock-outline
+              - entity: device_tracker.john_life360
+                name: Current Location
+                icon: mdi:map-marker
+
+          # Map showing John's location
+          - type: map
+            entities:
+              - entity: device_tracker.john_life360
+                label_mode: name
+              - entity: zone.home
+              - entity: zone.work
+              - entity: zone.bus_stop_leidschenveen
+              - entity: zone.den_haag_centraal
+            hours_to_show: 2
+            aspect_ratio: 16:9
+
+      # Next Departures
+      - type: custom:vertical-stack-in-card
+        title: "📅 Next Departures"
+        cards:
+          # Morning Bus
+          - type: custom:mushroom-template-card
+            primary: "Bus {{ state_attr('sensor.morning_bus', 'line_number') }} to {{ state_attr('sensor.morning_bus', 'destination') }}"
+            secondary: |
+              {% set mins = state_attr('sensor.morning_bus', 'minutes_until_departure') | int %}
+              {% set delay = state_attr('sensor.morning_bus', 'delay') | int %}
+              {% if delay > 0 %}
+                In {{ mins }} min ({{ delay }} min late) ⚠️
+              {% else %}
+                In {{ mins }} min ✅
+              {% endif %}
+            icon: mdi:bus
+            icon_color: |
+              {% set delay = state_attr('sensor.morning_bus', 'delay') | int %}
+              {% if delay > 5 %}
+                red
+              {% elif delay > 0 %}
+                orange
+              {% else %}
+                green
+              {% endif %}
+            tap_action:
+              action: more-info
+
+          # Alternative Departures
+          - type: entities
+            title: "Alternative Departures"
+            entities:
+              - entity: sensor.morning_bus_1
+                name: Next Bus
+                type: custom:template-entity-row
+                state: "{{ state_attr('sensor.morning_bus_1', 'expected_departure_time') }}"
+                secondary: "{{ state_attr('sensor.morning_bus_1', 'minutes_until_departure') }} min"
+              - entity: sensor.morning_bus_2
+                name: After That
+                type: custom:template-entity-row
+                state: "{{ state_attr('sensor.morning_bus_2', 'expected_departure_time') }}"
+                secondary: "{{ state_attr('sensor.morning_bus_2', 'minutes_until_departure') }} min"
+
+      # Train Connections
+      - type: custom:vertical-stack-in-card
+        title: "🚂 Train Connections"
+        cards:
+          - type: custom:mushroom-template-card
+            primary: "Train {{ state_attr('sensor.morning_train', 'line_number') }} to {{ state_attr('sensor.morning_train', 'destination') }}"
+            secondary: |
+              Platform {{ state_attr('sensor.morning_train', 'platform') }} - 
+              Departs {{ state_attr('sensor.morning_train', 'expected_departure_time') }}
+            icon: mdi:train
+            icon_color: blue
+            badge_icon: |
+              {% if state_attr('sensor.morning_train', 'delay') | int > 0 %}
+                mdi:alert
+              {% endif %}
+            badge_color: |
+              {% if state_attr('sensor.morning_train', 'delay') | int > 5 %}
+                red
+              {% elif state_attr('sensor.morning_train', 'delay') | int > 0 %}
+                orange
+              {% endif %}
+
+          - type: entities
+            entities:
+              - entity: sensor.morning_train_1
+                name: Next Train
+              - entity: sensor.morning_train_2
+                name: After That
+
+      # Journey Timeline
+      - type: custom:timeline-card
+        title: "📊 Journey Progress"
+        entities:
+          - entity: binary_sensor.john_at_home
+            name: Home
+            icon: mdi:home
+          - entity: binary_sensor.john_at_bus_stop
+            name: Bus Stop
+            icon: mdi:bus-stop
+          - entity: binary_sensor.john_on_bus
+            name: On Bus
+            icon: mdi:bus
+          - entity: binary_sensor.john_at_station
+            name: Station
+            icon: mdi:train-car
+          - entity: binary_sensor.john_on_train
+            name: On Train
+            icon: mdi:train
+          - entity: binary_sensor.john_at_work
+            name: Work
+            icon: mdi:briefcase
+
+      # Statistics
+      - type: custom:apexcharts-card
+        title: "📈 Journey Statistics"
+        graph_span: 7d
+        header:
+          show: true
+          title: "Journey Times This Week"
+        series:
+          - entity: sensor.john_journey_duration
+            name: Journey Duration
+            type: column
+            group_by:
+              func: avg
+              duration: 1d
+
+      # Alerts & Notifications
+      - type: custom:vertical-stack-in-card
+        title: "⚠️ Active Alerts"
+        cards:
+          - type: conditional
+            conditions:
+              - entity: sensor.john_journey_status
+                state: "missed_bus"
+            card:
+              type: custom:mushroom-template-card
+              primary: "Missed Bus!"
+              secondary: "Check alternative departures above"
+              icon: mdi:alert-circle
+              icon_color: red
+
+          - type: conditional
+            conditions:
+              - entity: sensor.john_journey_status
+                state: "unexpected_stop"
+            card:
+              type: custom:mushroom-template-card
+              primary: "Unexpected Stop"
+              secondary: "{{ state_attr('device_tracker.john_life360', 'address') }}"
+              icon: mdi:map-marker-alert
+              icon_color: orange
+              tap_action:
+                action: fire-dom-event
+                browser_mod:
+                  service: browser_mod.popup
+                  data:
+                    content:
+                      type: map
+                      entities:
+                        - device_tracker.john_life360
+
+      # Quick Actions
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: action
+            icon: mdi:refresh
+            tap_action:
+              action: call-service
+              service: homeassistant.update_entity
+              service_data:
+                entity_id:
+                  - sensor.morning_bus
+                  - sensor.morning_train
+          - type: action
+            icon: mdi:map-marker-check
+            tap_action:
+              action: call-service
+              service: life360.update_location
+              service_data:
+                entity_id: device_tracker.john_life360
+          - type: action
+            icon: mdi:phone
+            tap_action:
+              action: call-service
+              service: notify.mobile_app_moms_phone
+              service_data:
+                message: "Where are you?"
+
+  # Return Journey Card (Evening)
+  - type: vertical-stack
+    title: "🏠 Return Journey"
+    cards:
+      - type: custom:mushroom-template-card
+        primary: "Evening Bus Home"
+        secondary: |
+          {% set mins = state_attr('sensor.evening_bus', 'minutes_until_departure') | int %}
+          Next bus in {{ mins }} minutes
+        icon: mdi:bus-side
+        icon_color: |
+          {% if state_attr('sensor.evening_bus', 'minutes_until_departure') | int < 5 %}
+            red
+          {% elif state_attr('sensor.evening_bus', 'minutes_until_departure') | int < 15 %}
+            orange
+          {% else %}
+            green
+          {% endif %}
+
+      - type: entities
+        entities:
+          - sensor.evening_bus
+          - sensor.evening_bus_1
+          - sensor.evening_bus_2
+```
+
+## Simplified Mobile Dashboard
+
+```yaml
+title: Transport
+path: transport-mobile
+panel: true
+cards:
+  - type: custom:layout-card
+    layout_type: custom:grid-layout
+    layout:
+      grid-template-columns: 100%
+      grid-template-rows: auto
+    cards:
+      # Current Status Banner
+      - type: custom:mushroom-template-card
+        primary: |
+          {% if is_state('sensor.john_journey_status', 'on_bus') %}
+            🚌 On the Bus
+          {% elif is_state('sensor.john_journey_status', 'on_train') %}
+            🚂 On the Train
+          {% elif is_state('sensor.john_journey_status', 'driving') %}
+            🚗 Driving
+          {% else %}
+            📍 {{ states('sensor.john_journey_status') | replace('_', ' ') | title }}
+          {% endif %}
+        secondary: "ETA: {{ states('sensor.john_to_work_eta') }}"
+        icon: mdi:map-marker-path
+        layout: horizontal
+
+      # Next Departure
+      - type: custom:mushroom-template-card
+        primary: "Next: Bus {{ state_attr('sensor.morning_bus', 'line_number') }}"
+        secondary: "In {{ state_attr('sensor.morning_bus', 'minutes_until_departure') }} min"
+        icon: mdi:bus-clock
+        icon_color: |
+          {% set mins = state_attr('sensor.morning_bus', 'minutes_until_departure') | int %}
+          {% if mins < 5 %}
+            red
+          {% elif mins < 10 %}
+            orange
+          {% else %}
+            green
+          {% endif %}
+        tap_action:
+          action: more-info
+
+      # Quick Map
+      - type: map
+        entities:
+          - device_tracker.john_life360
+        hours_to_show: 1
+        aspect_ratio: 16:9
+```
+
+---
+
+**Required Custom Cards:**
+- `mushroom-template-card` (HACS)
+- `vertical-stack-in-card` (HACS)
+- `apexcharts-card` (HACS)
+- `timeline-card` (HACS)
+- `layout-card` (HACS)
+
+Install via HACS → Frontend

@@ -1,0 +1,291 @@
+# Example Automations for Transport Family Tracker
+
+## 1. Basic Transport Notifications
+
+### Notify when bus is arriving soon
+```yaml
+automation:
+  - alias: "Bus Arriving Soon"
+    trigger:
+      - platform: state
+        entity_id: sensor.morning_bus
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.attributes.minutes_until_departure | int <= 5 }}"
+    action:
+      - service: notify.mobile_app_johns_phone
+        data:
+          title: "🚌 Bus Arriving"
+          message: "Bus {{ trigger.to_state.attributes.line_number }} in {{ trigger.to_state.attributes.minutes_until_departure }} minutes"
+```
+
+### Notify about delays
+```yaml
+automation:
+  - alias: "Transport Delayed"
+    trigger:
+      - platform: state
+        entity_id: sensor.morning_train
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.attributes.delay | int > 5 }}"
+    action:
+      - service: notify.family
+        data:
+          title: "⚠️ Train Delayed"
+          message: "Train to {{ trigger.to_state.attributes.destination }} is {{ trigger.to_state.attributes.delay }} minutes late"
+```
+
+## 2. Multi-Modal Journey Tracking
+
+### Detect transport mode
+```yaml
+automation:
+  - alias: "Detect John's Transport Mode"
+    trigger:
+      - platform: state
+        entity_id: person.john
+        from: "home"
+    action:
+      - service: python_script.detect_transport_mode
+        data:
+          person: john
+          route: morning_commute
+      - delay: "00:00:30"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: sensor.john_transport_mode
+                state: "driving"
+            sequence:
+              - service: notify.home_assistant
+                data:
+                  message: "John is driving to work. ETA: {{ states('sensor.john_to_work_eta') }}"
+          - conditions:
+              - condition: state
+                entity_id: sensor.john_transport_mode
+                state: "on_bus"
+            sequence:
+              - service: notify.home_assistant
+                data:
+                  message: "John is on the bus. Next stop: {{ state_attr('sensor.morning_bus', 'destination') }}"
+```
+
+### Track journey progress
+```yaml
+automation:
+  - alias: "Journey Progress Tracking"
+    trigger:
+      - platform: time_pattern
+        minutes: "/2"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.john_commute_active
+        state: "on"
+    action:
+      - service: script.update_journey_status
+        data:
+          person: john
+          journey: morning_commute
+```
+
+### Detect missed transport
+```yaml
+automation:
+  - alias: "Missed Bus Alert"
+    trigger:
+      - platform: template
+        value_template: >
+          {{ states('sensor.john_journey_status') == 'missed_bus' }}
+    action:
+      - service: notify.mobile_app_johns_phone
+        data:
+          title: "🚌 Missed Bus"
+          message: "You missed the {{ state_attr('sensor.morning_bus', 'line_number') }}. Next bus in {{ state_attr('sensor.morning_bus_1', 'minutes_until_departure') }} minutes"
+      - service: notify.home_assistant
+        data:
+          message: "John missed the bus. Alternative transport options available."
+```
+
+## 3. Unexpected Stop Detection
+
+### Detect unplanned stops
+```yaml
+automation:
+  - alias: "Unexpected Stop Detected"
+    trigger:
+      - platform: state
+        entity_id: sensor.john_journey_status
+        to: "unexpected_stop"
+    action:
+      - service: notify.family
+        data:
+          title: "📍 Unexpected Stop"
+          message: >
+            John stopped at {{ state_attr('device_tracker.john_life360', 'address') }}
+            Duration: {{ states('sensor.john_stop_duration') }} minutes
+          data:
+            actions:
+              - action: "CALL_JOHN"
+                title: "Call John"
+              - action: "VIEW_MAP"
+                title: "View Map"
+```
+
+### Resume journey notification
+```yaml
+automation:
+  - alias: "Journey Resumed"
+    trigger:
+      - platform: state
+        entity_id: sensor.john_journey_status
+        from: "unexpected_stop"
+    action:
+      - service: notify.home_assistant
+        data:
+          message: >
+            John is moving again. 
+            Transport mode: {{ states('sensor.john_transport_mode') }}
+            New ETA: {{ states('sensor.john_to_work_eta') }}
+```
+
+## 4. Smart Departure Reminders
+
+### Morning departure reminder
+```yaml
+automation:
+  - alias: "Morning Departure Reminder"
+    trigger:
+      - platform: template
+        value_template: >
+          {{ state_attr('sensor.morning_bus', 'minutes_until_departure') | int == 10 }}
+    condition:
+      - condition: state
+        entity_id: person.john
+        state: "home"
+      - condition: time
+        weekday:
+          - mon
+          - tue
+          - wed
+          - thu
+          - fri
+    action:
+      - service: notify.mobile_app_johns_phone
+        data:
+          title: "🚌 Time to Leave"
+          message: "Bus {{ state_attr('sensor.morning_bus', 'line_number') }} in 10 minutes"
+          data:
+            priority: high
+```
+
+## 5. ETA-Based Home Automation
+
+### Prepare arrival at home
+```yaml
+automation:
+  - alias: "Prepare Home Before Arrival"
+    trigger:
+      - platform: template
+        value_template: >
+          {{ states('sensor.john_to_home_eta') | int <= 10 }}
+    condition:
+      - condition: state
+        entity_id: binary_sensor.someone_home
+        state: "off"
+    action:
+      - service: climate.set_temperature
+        target:
+          entity_id: climate.living_room
+        data:
+          temperature: 21
+      - service: light.turn_on
+        target:
+          entity_id: light.entrance
+        data:
+          brightness: 150
+```
+
+## 6. Family Coordination
+
+### Notify family of arrival time
+```yaml
+automation:
+  - alias: "Share Arrival ETA"
+    trigger:
+      - platform: state
+        entity_id: sensor.john_transport_mode
+        to: "on_train"
+    action:
+      - service: notify.family_group
+        data:
+          message: >
+            John is on the train home.
+            Expected arrival: {{ states('sensor.john_to_home_eta') }}
+```
+
+## Template Sensors for Journey Tracking
+
+Add these to your `configuration.yaml`:
+
+```yaml
+template:
+  - sensor:
+      - name: "John Journey Status"
+        state: >
+          {% set person = 'device_tracker.john_life360' %}
+          {% set route = 'sensor.morning_bus' %}
+          {% set speed = state_attr(person, 'speed') | float(0) %}
+          {% set distance_to_stop = states('sensor.john_to_bus_stop_distance') | float(1000) %}
+          {% set bus_departed = state_attr(route, 'minutes_until_departure') | int < -5 %}
+          
+          {% if distance_to_stop < 100 and speed < 5 %}
+            waiting_at_stop
+          {% elif speed > 10 and speed < 60 and not bus_departed %}
+            on_bus
+          {% elif bus_departed and distance_to_stop > 500 %}
+            missed_bus
+          {% elif speed > 0 and speed < 10 %}
+            walking
+          {% elif speed > 60 %}
+            driving
+          {% else %}
+            stationary
+          {% endif %}
+
+      - name: "John Transport Mode"
+        state: >
+          {% set speed = state_attr('device_tracker.john_life360', 'speed') | float(0) %}
+          {% if speed < 5 %}
+            stationary
+          {% elif speed < 10 %}
+            walking
+          {% elif speed < 60 %}
+            bus_or_tram
+          {% elif speed < 120 %}
+            train
+          {% else %}
+            driving
+          {% endif %}
+```
+
+## Scripts
+
+### Update Journey Status Script
+```yaml
+script:
+  update_journey_status:
+    sequence:
+      - service: life360.update_location
+        target:
+          entity_id: device_tracker.{{ person }}_life360
+      - delay: "00:00:05"
+      - service: python_script.analyze_journey
+        data:
+          person: "{{ person }}"
+          journey: "{{ journey }}"
+```
+
+---
+
+**Note:** These are example automations. Customize entity IDs, names, and thresholds to match your setup.
