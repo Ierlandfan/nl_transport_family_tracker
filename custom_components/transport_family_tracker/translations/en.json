@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Family Transport Tracker Setup",
+        "description": "Configure family members to track on public transport routes",
+        "menu_options": {
+          "add_person": "Add Person to Track",
+          "finish": "Finish Setup"
+        }
+      },
+      "add_person": {
+        "title": "Add Person to Track",
+        "description": "Link a family member's Life360 tracker to their transport routes",
+        "data": {
+          "person": "Life360 Device Tracker",
+          "morning_route": "Morning Transport Route (optional)",
+          "morning_departure_time": "Morning Departure Time (optional)",
+          "morning_days": "Morning Active Days",
+          "morning_exclude_holidays": "Morning: Skip Holidays",
+          "morning_custom_exclude_dates": "Morning: Custom Exclude Dates",
+          "evening_route": "Evening Transport Route (optional)",
+          "evening_departure_time": "Evening Departure Time (optional)",
+          "evening_days": "Evening Active Days",
+          "evening_exclude_holidays": "Evening: Skip Holidays",
+          "evening_custom_exclude_dates": "Evening: Custom Exclude Dates",
+          "notify_entities": "Who to Notify (optional)"
+        }
+      },
+      "finish": {
+        "title": "Setup Complete"
+      }
+    },
+    "abort": {
+      "no_people": "At least one person must be added"
+    }
+  }
+}
