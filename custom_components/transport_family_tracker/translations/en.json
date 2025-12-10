@@ -34,5 +34,47 @@
     "abort": {
       "no_people": "At least one person must be added"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Family Transport Tracker",
+        "menu_options": {
+          "edit_person": "Edit Person Routes",
+          "settings": "Advanced Settings"
+        }
+      },
+      "select_person": {
+        "title": "Select Person to Edit",
+        "data": {
+          "person_index": "Person"
+        }
+      },
+      "edit_person": {
+        "title": "Edit Person Configuration",
+        "data": {
+          "person": "Life360 Device Tracker",
+          "morning_route": "Morning Transport Route",
+          "morning_departure_time": "Morning Departure Time",
+          "morning_days": "Morning Active Days",
+          "morning_exclude_holidays": "Morning: Skip Holidays",
+          "morning_custom_exclude_dates": "Morning: Custom Exclude Dates (comma separated)",
+          "evening_route": "Evening Transport Route",
+          "evening_departure_time": "Evening Departure Time",
+          "evening_days": "Evening Active Days",
+          "evening_exclude_holidays": "Evening: Skip Holidays",
+          "evening_custom_exclude_dates": "Evening: Custom Exclude Dates (comma separated)",
+          "notify_entities": "Who to Notify"
+        }
+      },
+      "settings": {
+        "title": "Advanced Settings",
+        "data": {
+          "station_radius": "Station Detection Radius (meters)",
+          "route_tolerance": "Route Tolerance (meters)",
+          "departure_window": "Departure Time Window (minutes)"
+        }
+      }
+    }
   }
 }
