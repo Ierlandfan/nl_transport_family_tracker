@@ -153,14 +153,20 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
     
     async def async_step_select_person(self, user_input=None):
         """Select which person to edit."""
+        if not self.people:
+            # No people configured yet
+            return self.async_abort(reason="no_people_configured")
+        
         if user_input is not None:
             self.current_person_index = user_input["person_index"]
             return await self.async_step_edit_person()
         
-        person_options = [
-            {"value": str(i), "label": p.get("person", f"Person {i+1}")}
-            for i, p in enumerate(self.people)
-        ]
+        person_options = []
+        for i, p in enumerate(self.people):
+            entity_id = p.get("person", f"Person {i+1}")
+            # Get friendly name from entity_id (e.g., device_tracker.life360_john -> John)
+            name = entity_id.split(".")[-1].replace("life360_", "").replace("_", " ").title()
+            person_options.append({"value": str(i), "label": name})
         
         return self.async_show_form(
             step_id="select_person",
