@@ -132,7 +132,8 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        super().__init__()
+        self._config_entry = config_entry
         self.people = list(config_entry.data.get("people", []))
         self.current_person_index = None
 
@@ -181,9 +182,9 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
             
             # Update the config entry
             self.hass.config_entries.async_update_entry(
-                self.config_entry,
+                self._config_entry,
                 data={
-                    **self.config_entry.data,
+                    **self._config_entry.data,
                     "people": self.people,
                 },
             )
@@ -251,9 +252,9 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             # Update the config entry
             self.hass.config_entries.async_update_entry(
-                self.config_entry,
+                self._config_entry,
                 data={
-                    **self.config_entry.data,
+                    **self._config_entry.data,
                     **user_input,
                 },
             )
@@ -264,15 +265,15 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema({
                 vol.Optional(
                     CONF_STATION_RADIUS,
-                    default=self.config_entry.data.get("station_radius", DEFAULT_STATION_RADIUS),
+                    default=self._config_entry.data.get("station_radius", DEFAULT_STATION_RADIUS),
                 ): int,
                 vol.Optional(
                     CONF_ROUTE_TOLERANCE,
-                    default=self.config_entry.data.get("route_tolerance", DEFAULT_ROUTE_TOLERANCE),
+                    default=self._config_entry.data.get("route_tolerance", DEFAULT_ROUTE_TOLERANCE),
                 ): int,
                 vol.Optional(
                     CONF_DEPARTURE_WINDOW,
-                    default=self.config_entry.data.get("departure_window", DEFAULT_DEPARTURE_WINDOW),
+                    default=self._config_entry.data.get("departure_window", DEFAULT_DEPARTURE_WINDOW),
                 ): int,
             }),
         )
