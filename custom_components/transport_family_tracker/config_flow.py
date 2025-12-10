@@ -164,6 +164,11 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
             self.current_person_index = user_input["person_index"]
             return await self.async_step_edit_person()
         
+        # If only one person, skip selection and edit directly
+        if len(self.people) == 1:
+            self.current_person_index = "0"
+            return await self.async_step_edit_person()
+        
         person_options = []
         for i, p in enumerate(self.people):
             entity_id = p.get("person", f"Person {i+1}")
@@ -199,6 +204,11 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
                     },
                 )
                 return self.async_create_entry(title="", data={})
+            
+            # Ensure we have a valid person index
+            if self.current_person_index is None:
+                _LOGGER.error("current_person_index is None, redirecting to select_person")
+                return await self.async_step_select_person()
             
             idx = int(self.current_person_index)
             person = self.people[idx]
