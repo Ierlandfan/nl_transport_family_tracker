@@ -133,14 +133,134 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
+        self.people = list(config_entry.data.get("people", []))
+        self.current_person_index = None
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            action = user_input.get("action")
+            if action == "edit_person":
+                return await self.async_step_select_person()
+            elif action == "settings":
+                return await self.async_step_settings()
+        
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["edit_person", "settings"],
+        )
+    
+    async def async_step_select_person(self, user_input=None):
+        """Select which person to edit."""
+        if user_input is not None:
+            self.current_person_index = user_input["person_index"]
+            return await self.async_step_edit_person()
+        
+        person_options = [
+            {"value": str(i), "label": p.get("person", f"Person {i+1}")}
+            for i, p in enumerate(self.people)
+        ]
+        
+        return self.async_show_form(
+            step_id="select_person",
+            data_schema=vol.Schema({
+                vol.Required("person_index"): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=person_options,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            }),
+        )
+    
+    async def async_step_edit_person(self, user_input=None):
+        """Edit a person's configuration."""
+        if user_input is not None:
+            idx = int(self.current_person_index)
+            self.people[idx] = user_input
+            
+            # Update the config entry
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    "people": self.people,
+                },
+            )
+            return self.async_create_entry(title="", data={})
+        
+        idx = int(self.current_person_index)
+        person = self.people[idx]
+        
+        return self.async_show_form(
+            step_id="edit_person",
+            data_schema=vol.Schema({
+                vol.Required(CONF_PERSON, default=person.get(CONF_PERSON)): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="device_tracker")
+                ),
+                vol.Optional(CONF_MORNING_ROUTE, default=person.get(CONF_MORNING_ROUTE)): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="sensor")
+                ),
+                vol.Optional("morning_departure_time", default=person.get("morning_departure_time")): selector.TimeSelector(),
+                vol.Optional("morning_days", default=person.get("morning_days", ["mon", "tue", "wed", "thu", "fri"])): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            {"value": "mon", "label": "Monday"},
+                            {"value": "tue", "label": "Tuesday"},
+                            {"value": "wed", "label": "Wednesday"},
+                            {"value": "thu", "label": "Thursday"},
+                            {"value": "fri", "label": "Friday"},
+                            {"value": "sat", "label": "Saturday"},
+                            {"value": "sun", "label": "Sunday"},
+                        ],
+                        multiple=True,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Optional("morning_exclude_holidays", default=person.get("morning_exclude_holidays", True)): bool,
+                vol.Optional("morning_custom_exclude_dates", default=person.get("morning_custom_exclude_dates", "")): str,
+                vol.Optional(CONF_EVENING_ROUTE, default=person.get(CONF_EVENING_ROUTE)): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="sensor")
+                ),
+                vol.Optional("evening_departure_time", default=person.get("evening_departure_time")): selector.TimeSelector(),
+                vol.Optional("evening_days", default=person.get("evening_days", ["mon", "tue", "wed", "thu", "fri"])): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            {"value": "mon", "label": "Monday"},
+                            {"value": "tue", "label": "Tuesday"},
+                            {"value": "wed", "label": "Wednesday"},
+                            {"value": "thu", "label": "Thursday"},
+                            {"value": "fri", "label": "Friday"},
+                            {"value": "sat", "label": "Saturday"},
+                            {"value": "sun", "label": "Sunday"},
+                        ],
+                        multiple=True,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Optional("evening_exclude_holidays", default=person.get("evening_exclude_holidays", True)): bool,
+                vol.Optional("evening_custom_exclude_dates", default=person.get("evening_custom_exclude_dates", "")): str,
+                vol.Optional(CONF_NOTIFY, default=person.get(CONF_NOTIFY, [])): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="notify", multiple=True)
+                ),
+            }),
+        )
+
+    async def async_step_settings(self, user_input=None):
+        """Manage the settings."""
+        if user_input is not None:
+            # Update the config entry
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    **user_input,
+                },
+            )
+            return self.async_create_entry(title="", data={})
 
         return self.async_show_form(
-            step_id="init",
+            step_id="settings",
             data_schema=vol.Schema({
                 vol.Optional(
                     CONF_STATION_RADIUS,
