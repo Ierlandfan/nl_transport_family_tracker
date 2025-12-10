@@ -172,7 +172,8 @@ class FamilyTransportTracker:
     ) -> dict:
         """Determine person's transport status."""
         # Get station coordinates from route
-        route_coords = route_state.attributes.get("route_coordinates", [])
+        # Dutch Public Transport uses 'coordinates', not 'route_coordinates'
+        route_coords = route_state.attributes.get("coordinates") or route_state.attributes.get("route_coordinates", [])
         
         if not route_coords:
             return {"status": STATUS_NOT_TRAVELING, "confidence": 50}
@@ -233,7 +234,8 @@ class FamilyTransportTracker:
         current_time = dt_util.now()
         
         # Get expected departure and destination
-        route_coords = route_state.attributes.get("route_coordinates", [])
+        # Dutch Public Transport uses 'coordinates', not 'route_coordinates'
+        route_coords = route_state.attributes.get("coordinates") or route_state.attributes.get("route_coordinates", [])
         if not route_coords:
             return None
         
