@@ -32,7 +32,8 @@
       }
     },
     "abort": {
-      "no_people": "At least one person must be added"
+      "no_people": "At least one person must be added",
+      "no_people_configured": "No people configured yet. Please add a person first by deleting and recreating the integration."
     }
   },
   "options": {

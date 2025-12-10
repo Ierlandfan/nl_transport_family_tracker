@@ -1,10 +1,13 @@
 """Config flow for Family Transport Tracker."""
 from __future__ import annotations
 
+import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import selector
+
+_LOGGER = logging.getLogger(__name__)
 
 from .const import (
     DOMAIN,
@@ -182,76 +185,82 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
     
     async def async_step_edit_person(self, user_input=None):
         """Edit a person's configuration."""
-        if user_input is not None:
-            idx = int(self.current_person_index)
-            self.people[idx] = user_input
+        try:
+            if user_input is not None:
+                idx = int(self.current_person_index)
+                self.people[idx] = user_input
+                
+                # Update the config entry
+                self.hass.config_entries.async_update_entry(
+                    self._config_entry,
+                    data={
+                        **self._config_entry.data,
+                        "people": self.people,
+                    },
+                )
+                return self.async_create_entry(title="", data={})
             
-            # Update the config entry
-            self.hass.config_entries.async_update_entry(
-                self._config_entry,
-                data={
-                    **self._config_entry.data,
-                    "people": self.people,
-                },
+            idx = int(self.current_person_index)
+            person = self.people[idx]
+            
+            _LOGGER.debug("Editing person %s with data: %s", idx, person)
+            
+            return self.async_show_form(
+                step_id="edit_person",
+                data_schema=vol.Schema({
+                    vol.Required(CONF_PERSON, default=person.get(CONF_PERSON)): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="device_tracker")
+                    ),
+                    vol.Optional(CONF_MORNING_ROUTE, default=person.get(CONF_MORNING_ROUTE)): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="sensor")
+                    ),
+                    vol.Optional("morning_departure_time", default=person.get("morning_departure_time")): selector.TimeSelector(),
+                    vol.Optional("morning_days", default=person.get("morning_days", ["mon", "tue", "wed", "thu", "fri"])): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                {"value": "mon", "label": "Monday"},
+                                {"value": "tue", "label": "Tuesday"},
+                                {"value": "wed", "label": "Wednesday"},
+                                {"value": "thu", "label": "Thursday"},
+                                {"value": "fri", "label": "Friday"},
+                                {"value": "sat", "label": "Saturday"},
+                                {"value": "sun", "label": "Sunday"},
+                            ],
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    vol.Optional("morning_exclude_holidays", default=person.get("morning_exclude_holidays", True)): bool,
+                    vol.Optional("morning_custom_exclude_dates", default=person.get("morning_custom_exclude_dates", "")): str,
+                    vol.Optional(CONF_EVENING_ROUTE, default=person.get(CONF_EVENING_ROUTE)): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="sensor")
+                    ),
+                    vol.Optional("evening_departure_time", default=person.get("evening_departure_time")): selector.TimeSelector(),
+                    vol.Optional("evening_days", default=person.get("evening_days", ["mon", "tue", "wed", "thu", "fri"])): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                {"value": "mon", "label": "Monday"},
+                                {"value": "tue", "label": "Tuesday"},
+                                {"value": "wed", "label": "Wednesday"},
+                                {"value": "thu", "label": "Thursday"},
+                                {"value": "fri", "label": "Friday"},
+                                {"value": "sat", "label": "Saturday"},
+                                {"value": "sun", "label": "Sunday"},
+                            ],
+                            multiple=True,
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    vol.Optional("evening_exclude_holidays", default=person.get("evening_exclude_holidays", True)): bool,
+                    vol.Optional("evening_custom_exclude_dates", default=person.get("evening_custom_exclude_dates", "")): str,
+                    vol.Optional(CONF_NOTIFY, default=person.get(CONF_NOTIFY, [])): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="notify", multiple=True)
+                    ),
+                }),
             )
-            return self.async_create_entry(title="", data={})
-        
-        idx = int(self.current_person_index)
-        person = self.people[idx]
-        
-        return self.async_show_form(
-            step_id="edit_person",
-            data_schema=vol.Schema({
-                vol.Required(CONF_PERSON, default=person.get(CONF_PERSON)): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="device_tracker")
-                ),
-                vol.Optional(CONF_MORNING_ROUTE, default=person.get(CONF_MORNING_ROUTE)): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor")
-                ),
-                vol.Optional("morning_departure_time", default=person.get("morning_departure_time")): selector.TimeSelector(),
-                vol.Optional("morning_days", default=person.get("morning_days", ["mon", "tue", "wed", "thu", "fri"])): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[
-                            {"value": "mon", "label": "Monday"},
-                            {"value": "tue", "label": "Tuesday"},
-                            {"value": "wed", "label": "Wednesday"},
-                            {"value": "thu", "label": "Thursday"},
-                            {"value": "fri", "label": "Friday"},
-                            {"value": "sat", "label": "Saturday"},
-                            {"value": "sun", "label": "Sunday"},
-                        ],
-                        multiple=True,
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                    )
-                ),
-                vol.Optional("morning_exclude_holidays", default=person.get("morning_exclude_holidays", True)): bool,
-                vol.Optional("morning_custom_exclude_dates", default=person.get("morning_custom_exclude_dates", "")): str,
-                vol.Optional(CONF_EVENING_ROUTE, default=person.get(CONF_EVENING_ROUTE)): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor")
-                ),
-                vol.Optional("evening_departure_time", default=person.get("evening_departure_time")): selector.TimeSelector(),
-                vol.Optional("evening_days", default=person.get("evening_days", ["mon", "tue", "wed", "thu", "fri"])): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[
-                            {"value": "mon", "label": "Monday"},
-                            {"value": "tue", "label": "Tuesday"},
-                            {"value": "wed", "label": "Wednesday"},
-                            {"value": "thu", "label": "Thursday"},
-                            {"value": "fri", "label": "Friday"},
-                            {"value": "sat", "label": "Saturday"},
-                            {"value": "sun", "label": "Sunday"},
-                        ],
-                        multiple=True,
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                    )
-                ),
-                vol.Optional("evening_exclude_holidays", default=person.get("evening_exclude_holidays", True)): bool,
-                vol.Optional("evening_custom_exclude_dates", default=person.get("evening_custom_exclude_dates", "")): str,
-                vol.Optional(CONF_NOTIFY, default=person.get(CONF_NOTIFY, [])): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="notify", multiple=True)
-                ),
-            }),
-        )
+        except Exception as err:
+            _LOGGER.error("Error in async_step_edit_person: %s", err, exc_info=True)
+            return self.async_abort(reason="edit_person_error")
 
     async def async_step_settings(self, user_input=None):
         """Manage the settings."""
