@@ -101,8 +101,8 @@ class FamilyTransportTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN)
                 ),
                 vol.Optional("evening_exclude_holidays", default=True): bool,
                 vol.Optional("evening_custom_exclude_dates"): str,
-                vol.Optional(CONF_NOTIFY, default=[]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="notify", multiple=True)
+                vol.Optional(CONF_NOTIFY, default={}): selector.TargetSelector(
+                    selector.TargetSelectorConfig()
                 ),
             }),
             errors=errors,
@@ -263,8 +263,8 @@ class FamilyTransportTrackerOptionsFlow(config_entries.OptionsFlow):
                     ),
                     vol.Optional("evening_exclude_holidays", default=person.get("evening_exclude_holidays", True)): bool,
                     vol.Optional("evening_custom_exclude_dates", default=person.get("evening_custom_exclude_dates", "")): str,
-                    vol.Optional(CONF_NOTIFY, default=person.get(CONF_NOTIFY, [])): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain="notify", multiple=True)
+                    vol.Optional(CONF_NOTIFY, default=person.get(CONF_NOTIFY, {})): selector.TargetSelector(
+                        selector.TargetSelectorConfig()
                     ),
                 }),
             )
