@@ -33,7 +33,8 @@
     },
     "abort": {
       "no_people": "At least one person must be added",
-      "no_people_configured": "No people configured yet. Please add a person first by deleting and recreating the integration."
+      "no_people_configured": "No people configured yet. Please add a person first by deleting and recreating the integration.",
+      "edit_person_error": "Error loading person configuration. Check Home Assistant logs for details."
     }
   },
   "options": {
